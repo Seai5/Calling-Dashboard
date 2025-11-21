@@ -1,0 +1,103 @@
+Call Disposed Status,Connected/Not Connected,Primary Disposition,Secondary Disposition
+ANA--Ringing/No Answer,Not connected,Not Connected,ANA--Ringing/No Answer
+CNA--NO Answer,Not connected,Not Connected,CNA--NO Answer
+CNA--Normal Circuit Congestion,Not connected,Not Connected,CNA--Normal Circuit Congestion
+CNA--Ringing/No Answer,Not connected,Not Connected,CNA--Ringing/No Answer
+CNA--User Busy,Not connected,Not Connected,CNA--User Busy
+Test Lead,Connected,Lost,Test Lead
+NOANSWER,Not connected,Not Connected,NOANSWER
+Ringing,Not connected,Not Connected,Ringing
+REDIAL,Not connected,Not Connected,REDIAL
+DO NOT CALL,Connected,Lost,DO NOT CALL
+Call disconnected on opening,Connected,Open,Call disconnected on opening
+Not interested,Connected,Lost,Not interested
+No Answer,Not connected,Not Connected,No Answer
+AUTOWRAPUP,Not connected,Not Connected,AUTOWRAPUP
+Open,Connected,Open,Call disconnected on opening
+Hung Up,Connected,Open,Hung Up
+Wrong Number,Connected,Lost,Wrong Number
+Call Back,Connected,Call Back,Call Back
+ANA,Not connected,Not Connected,ANA
+Not looking for property,Connected,Lost,Not looking for property
+Answering Machine,Not connected,Not Connected,Answering Machine
+Not_Connected,Not connected,Not Connected,Not Connected
+Spoke to third Party,Connected,Lost,Spoke to third Party
+Share Details on WhatsApp,Connected,SDW,Share Details on WhatsApp
+Language Barrier,Connected,Lost,Language Barrier
+CNA--Network Out of Order,Not connected,Not Connected,CNA--Network Out of Order
+Location Mismatch,Connected,Lost,Location Mismatch
+Out Of Coverage,Not connected,Not Connected,Not Connected
+Follow up Cold,Connected,Follow Up,Follow up Cold
+Busy,Not connected,Not Connected,Busy
+Low Budget,Connected,Lost,Low Budget
+Others,Connected,Lost,Others
+Call_Back,Connected,Call Back,Call Back
+Channel Partner,Connected,Lost,Channel Partner
+CNA--Destination Out of Order,Not connected,Not Connected,CNA--Destination Out of Order
+Follow up warm,Connected,Follow Up,Follow up warm
+CNA--Call Rejected,Not connected,Not Connected,CNA--Call Rejected
+Dead Air,Connected,Lost,Dead Air
+Lost,Connected,Lost,Lost
+Plan drop,Connected,Lost,Plan drop
+CONGESTION,Not connected,Not Connected,CONGESTION
+ANSWERED,Not connected,Not connected,ANSWERED
+Ready to move in,Connected,Lost,Ready to move in
+CHANUNAVAIL,Not connected,Not Connected,CHANUNAVAIL
+Conditional Sale of property,Connected,Lost,Conditional Sale of property
+Booked with Competitor,Connected,Lost,Booked with Competitor
+RELOGIN,Not connected,Not Connected,RELOGIN
+ANA--NO Answer,Not connected,Not Connected,ANA--NO Answer
+Follow_up,Connected,Follow Up,Follow Up
+Commercial Enquiry,Connected,Lost,Commercial Enquiry
+Switch Off,Not connected,Not Connected,Switch Off
+ANA--Normal Call Clearing,Not connected,Not Connected,ANA--Normal Call Clearing
+Follow up-NC,Connected,Follow Up,Follow up-NC
+Already Booked With Us,Connected,Lost,Already Booked With Us
+ANA--Subscriber Absent,Not connected,Not Connected,ANA--Subscriber Absent
+Invalid Enquiry,Connected,Lost,Invalid Enquiry
+ANA--No user responding,Not connected,Not Connected,ANA--No user responding
+Virtual Meet Done,Connected,Virtual Meet Confirmed,Virtual Meet Done
+CNA--No user responding,Not connected,Not Connected,CNA--No user responding
+CNA--Unallocated number,Not connected,Not Connected,CNA--Unallocated number
+ABANDONED,Not connected,Not Connected,ABANDONED
+Virtual Meet Confirmed,Connected,Virtual Meet Confirmed,Virtual Meet Confirmed
+Virtual Meet Proposed,Connected,Virtual Meet Proposed,Virtual Meet Proposed
+Not Response,Not connected,Not Connected,Not Response
+Not connected Answering Machine,Not connected,Not Connected,Not connected Answering Machine
+NI,Not connected,Not Connected,Not Connected
+Virtual_Meet_Confirmed,Connected,Virtual Meet Confirmed,Virtual Meet Confirmed
+ANA--User Busy,Not connected,Not Connected,ANA--User Busy
+Blank_Call,Not connected,Not Connected,Blank Call
+Virtual_Meet_Proposed,Connected,Virtual Meet Proposed,Virtual Meet Proposed
+Virtual_Meet_Done,Connected,Virtual Meet Confirmed,Virtual Meet Confirmed
+Invalid Profile,Connected,Lost,Invalid Profile
+AMD--Normal Call Clearing,Not connected,Not Connected,Normal Call Clearing
+AUTOLOGOFF,Not connected,Not Connected,AUTOLOGOFF
+Connected,Connected,Open,Call disconnected on opening
+NA,Not connected,Not Connected,No Answer
+DNC,Connected,DNC,DNC
+Residential Inquiry,Connected,Lost,Residential Inquiry
+Casual Customer,Connected,Lost,Casual Customer
+null,Not connected,Not Connected,No Answer
+Follow up NC,Connected,Follow Up,Follow Up
+Already_VC_Done,Connected,Lost,Already_VC_Done
+HotTransfer,Connected,Follow Up,Follow Up
+Follow up hot,Connected,Follow Up,Follow up hot
+VC Done by Other Vertical,Connected,Lost,VC Done by Other Vertical
+CNA--Normal Call Clearing,Not connected,Not Connected,CNA--Normal Call Clearing
+"Share Details on WhatsApp	",Connected,SDW,Share Details on WhatsApp
+Follow Up - NC,Connected,Follow Up,Follow Up - NC
+ANA--Channel Unacceptable--Channel Unacceptable,Not connected,Not connected,ANA--Channel Unacceptable--Channel Unacceptable
+ANA--Normal Circuit Congestion,Not connected,Not connected,ANA--Normal Circuit Congestion
+SDW,Connected,SDW,Share Details on WhatsApp
+VC,Connected,Virtual Meet Confirmed,Virtual Meet Confirmed
+Call Disconnected,Connected,Open,Call disconnected on opening
+CANCEL,Not connected,Not connected,CANCEL
+Location Mis,Connected,Lost,Location Mismatch
+BookedwithCompetitor,Connected,Lost,Booked with Competitor
+VP,Connected,Virtual Meet Proposed,Virtual Meet Proposed
+ABWU,Connected,Lost,Already Booked With Us
+MISSED,Not connected,Not Connected,MISSED
+Invalid_Number,Not connected,Not Connected,Invalid_Number
+0,Connected,Open,Call disconnected on opening
+BWC,Connected,Lost,BWC
