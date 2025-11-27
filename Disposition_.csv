@@ -19,8 +19,8 @@ Wrong Number,Connected,Lost,Wrong Number
 Call Back,Connected,Call Back,Call Back
 ANA,Not connected,Not Connected,ANA
 Not looking for property,Connected,Lost,Not looking for property
-Answering Machine,Not connected,Not Connected,Answering Machine
-Not_Connected,Not connected,Not Connected,Not Connected
+Answering Machine,Not Connected,Not Connected,Answering Machine
+Not_Connected,Not Connected,Not Connected,Not Connected
 Spoke to third Party,Connected,Lost,Spoke to third Party
 Share Details on WhatsApp,Connected,SDW,Share Details on WhatsApp
 Language Barrier,Connected,Lost,Language Barrier
@@ -40,7 +40,7 @@ Dead Air,Connected,Lost,Dead Air
 Lost,Connected,Lost,Lost
 Plan drop,Connected,Lost,Plan drop
 CONGESTION,Not connected,Not Connected,CONGESTION
-ANSWERED,Not connected,Not connected,ANSWERED
+ANSWERED,Not connected,Not Connected,ANSWERED
 Ready to move in,Connected,Lost,Ready to move in
 CHANUNAVAIL,Not connected,Not Connected,CHANUNAVAIL
 Conditional Sale of property,Connected,Lost,Conditional Sale of property
@@ -87,12 +87,12 @@ VC Done by Other Vertical,Connected,Lost,VC Done by Other Vertical
 CNA--Normal Call Clearing,Not connected,Not Connected,CNA--Normal Call Clearing
 "Share Details on WhatsApp	",Connected,SDW,Share Details on WhatsApp
 Follow Up - NC,Connected,Follow Up,Follow Up - NC
-ANA--Channel Unacceptable--Channel Unacceptable,Not connected,Not connected,ANA--Channel Unacceptable--Channel Unacceptable
-ANA--Normal Circuit Congestion,Not connected,Not connected,ANA--Normal Circuit Congestion
+ANA--Channel Unacceptable--Channel Unacceptable,Not connected,Not Connected,ANA--Channel Unacceptable--Channel Unacceptable
+ANA--Normal Circuit Congestion,Not connected,Not Connected,ANA--Normal Circuit Congestion
 SDW,Connected,SDW,Share Details on WhatsApp
 VC,Connected,Virtual Meet Confirmed,Virtual Meet Confirmed
 Call Disconnected,Connected,Open,Call disconnected on opening
-CANCEL,Not connected,Not connected,CANCEL
+CANCEL,Not connected,Not Connected,CANCEL
 Location Mis,Connected,Lost,Location Mismatch
 BookedwithCompetitor,Connected,Lost,Booked with Competitor
 VP,Connected,Virtual Meet Proposed,Virtual Meet Proposed
