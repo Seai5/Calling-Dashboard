@@ -242,8 +242,11 @@ st.altair_chart(bar, use_container_width=True)
 # List-wise Report
 st.subheader("List Name vs Primary Disposition (Unique Phone Numbers)")
 if not list_disp_summary.empty:
-    styled = list_disp_summary.style.format("{:,}").background_gradient(cmap="Blues", subset=["Total_Unique", "Positive"])
+    styled = list_disp_summary.style.format("{:,}").highlight_max(
+        subset=["Total_Unique", "Positive"], color="#c6e2ff"
+    )
     st.dataframe(styled, use_container_width=True)
+
     st.download_button(
         "Download List-wise Unique Report",
         data=list_disp_summary.to_csv().encode(),
@@ -291,3 +294,4 @@ st.download_button("Download Full Agent Report", agent_summary.to_csv(index=Fals
 # Raw Unique Data
 with st.expander("View Raw Unique Data (One Row Per Phone Number)"):
     st.dataframe(df_unique, use_container_width=True)
+
