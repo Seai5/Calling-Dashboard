@@ -1,12 +1,31 @@
 import pandas as pd
 import streamlit as st
 import altair as alt
+from datetime import datetime
 
 # ------------------- Page Config -------------------
-st.set_page_config(page_title="Call Analytics Dashboard", layout="wide", initial_sidebar_state="expanded")
-st.title("Call Data Analytics Dashboard (Unique Phone Numbers)")
+st.set_page_config(
+    page_title="Call Analytics Dashboard",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={'About': 'Unique Phone Number Analytics Dashboard'}
+)
 
-# ------------------- Session State -------------------
+# Custom CSS for better look
+st.markdown("""
+<style>
+    .main-header {font-size: 2.5rem; color: #1e3a8a; font-weight: bold; margin-bottom: 1rem;}
+    .sub-header {font-size: 1.8rem; color: #1e40af; margin: 1.5rem 0 1rem;}
+    .metric-card {background-color: #f8fafc; padding: 1rem; border-radius: 10px; border-left: 5px solid #0068c9;}
+    .stButton>button {width: 100%;}
+    .sidebar .sidebar-content {background-color: #f0f7ff;}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("<h1 class='main-header'>Call Analytics Dashboard</h1>", unsafe_allow_html=True)
+st.markdown("<p style='color:#64748b; font-size:1.1rem;'>Unique Phone Number Analysis – Best Call Retained (Longest Talk Time)</p>", unsafe_allow_html=True)
+
+# ------------------- Session State Initialization -------------------
 for key in ["df_merged", "df_unique", "summary", "agent_summary", "list_disposition_summary", "selected_metrics"]:
     if key not in st.session_state:
         st.session_state[key] = None
@@ -16,15 +35,25 @@ if st.session_state.selected_metrics is None:
 
 # ------------------- Sidebar -------------------
 with st.sidebar:
-    st.header("Upload & Filters")
-    uploaded_calling = st.file_uploader("Upload Calling.csv", type=["csv"], key="calling")
+    st.header("Upload & Configuration")
+    
+    uploaded_calling = st.file_uploader("Upload **Calling.csv**", type=["csv"], key="calling")
+    
+    if uploaded_calling is None:
+        st.info("Upload Calling.csv to begin analysis")
+        st.stop()
 
-    if st.button("Clear All Data & Reset", type="primary"):
+    if st.button("Clear Cache & Reset Dashboard", type="primary", use_container_width=True):
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.session_state.selected_metrics = set()
-        st.success("All data cleared!")
+        st.success("Cache cleared!")
         st.rerun()
+
+    st.markdown("---")
+    st.subheader("Filters")
+
+    # We'll apply filters after data load
 
 # ------------------- Core Functions -------------------
 def process_data(df_calling):
@@ -39,15 +68,11 @@ def process_data(df_calling):
         .fillna(df["Dialer Status"])
     )
 
-    # Talk Sec to seconds
     df["Talk Sec"] = pd.to_timedelta(df["Talk Sec"], errors='coerce').dt.total_seconds().fillna(0).astype(float)
-
-    # Date & Hour
     df["Call Start Time"] = pd.to_datetime(df["Call Start Time"], errors='coerce')
     df["Call Date"] = df["Call Start Time"].dt.date
     df["Hour"] = df["Call Start Time"].dt.hour
 
-    # Talk Slot Category
     def slot_category(sec):
         if sec == 0: return "No Interaction"
         elif sec < 30: return "Below 30s"
@@ -56,10 +81,9 @@ def process_data(df_calling):
         else: return "Above 2 Min"
     df["Slot"] = df["Talk Sec"].apply(slot_category)
 
-    # Merge with Disposition Mapping
     df_merged = pd.merge(df, df2, left_on="Sub Sub Disposition", right_on="Call Disposed Status", how="left")
-
-    # CRITICAL: Deduplicate by Phone Number → Keep BEST call (longest talk time)
+    
+    # Keep only BEST call per phone (longest talk time)
     df_merged = df_merged.sort_values("Talk Sec", ascending=False)
     df_unique = df_merged.drop_duplicates(subset="Phone Number", keep="first").copy()
 
@@ -89,20 +113,22 @@ def generate_metrics(df_unique):
     vc = disp_counts.get("Virtual Meet Confirmed", 0)
     positive_total = fw + vp + vc
 
-    summary = pd.DataFrame({
-        "Metric": [
-            "Unique Data Dialled", "Unique Connected", "Unique Connected >30s",
-            "Unique Connected >1min", "Unique Connected >2min", "Connect %",
-            "SDW (%)", "Lost (%)", "Follow Up (%)", "Virtual Meet Proposed (%)", "Virtual Meet Confirmed (%)", "Total Positive (%)"
-        ],
-        "Value": [
-            f"{total_dialled:,}", f"{unique_connected:,}", f"{gt_30s:,}",
-            f"{gt_1min:,}", f"{gt_2min:,}", f"{connect_pct}%",
-            f"{pct(sdw)}%", f"{pct(lost)}%", f"{pct(fw)}%", f"{pct(vp)}%", f"{pct(vc)}%", f"{pct(positive_total)}%"
-        ]
-    })
+    summary_data = {
+        "Unique Data Dialled": f"{total_dialled:,}",
+        "Unique Connected": f"{unique_connected:,}",
+        "Unique Connected >30s": f"{gt_30s:,}",
+        "Unique Connected >1min": f"{gt_1min:,}",
+        "Unique Connected >2min": f"{gt_2min:,}",
+        "Connect %": f"{connect_pct}%",
+        "SDW (%)": f"{pct(sdw)}%",
+        "Lost (%)": f"{pct(lost)}%",
+        "Follow Up (%)": f"{pct(fw)}%",
+        "Virtual Meet Proposed (%)": f"{pct(vp)}%",
+        "Virtual Meet Confirmed (%)": f"{pct(vc)}%",
+        "Total Positive (%)": f"{pct(positive_total)}%"
+    }
 
-    # Agent Summary - Fully Unique
+    # Agent Summary
     agent_base = df_unique.groupby("Agent Name").agg(
         Unique_Contacts=("Phone Number", "count"),
         Unique_Connected_GT30s=("Slot", lambda x: x.isin(["30s–1min", "1–2min", "Above 2 Min"]).sum()),
@@ -110,188 +136,241 @@ def generate_metrics(df_unique):
         Unique_Connected_GT2min=("Slot", lambda x: (x == "Above 2 Min").sum())
     ).reset_index()
 
-    # Positive Outcomes per Agent
-    agent_positive = df_unique[df_unique["Primary Disposition"].isin(positive_dispositions)]
-    positive_count = agent_positive.groupby("Agent Name").size().reset_index(name="Positive_Outcomes")
+    positive_count = df_unique[df_unique["Primary Disposition"].isin(positive_dispositions)] \
+        .groupby("Agent Name").size().reset_index(name="Positive_Outcomes")
 
     agent_summary = pd.merge(agent_base, positive_count, on="Agent Name", how="left").fillna(0)
     agent_summary["Positive_Outcomes"] = agent_summary["Positive_Outcomes"].astype(int)
     agent_summary["Effort_to_Positive"] = (agent_summary["Unique_Contacts"] / agent_summary["Positive_Outcomes"]).round(2)
-    agent_summary["Effort_to_Positive"] = agent_summary["Effort_to_Positive"].replace([float('inf'), 0], "-")
+    agent_summary["Effort_to_Positive"] = agent_summary["Effort_to_Positive"].replace([float('inf')], "-")
 
-    # Disposition breakdown per agent
-    disp_pivot = df_unique.groupby(["Agent Name", "Primary Disposition"]).size().unstack(fill_value=0).reset_index()
+    disp_pivot = df_unique.pivot_table(index="Agent Name", columns="Primary Disposition", aggfunc='size', fill_value=0).reset_index()
     agent_summary = pd.merge(agent_summary, disp_pivot, on="Agent Name", how="left").fillna(0)
 
-    # Reorder columns
-    cols_order = ["Agent Name", "Unique_Contacts", "Unique_Connected_GT30s", "Unique_Connected_GT1min",
-                  "Unique_Connected_GT2min", "Positive_Outcomes", "Effort_to_Positive"] + \
-                 sorted([c for c in agent_summary.columns if c not in ["Agent Name", "Unique_Contacts", "Unique_Connected_GT30s",
-                  "Unique_Connected_GT1min", "Unique_Connected_GT2min", "Positive_Outcomes", "Effort_to_Positive"]])
-    agent_summary = agent_summary[cols_order]
-
-    # List Name vs Disposition Summary
+    # List-wise
     if "List Name" in df_unique.columns and df_unique["List Name"].notna().any():
         list_disp = df_unique.groupby(["List Name", "Primary Disposition"]).size().unstack(fill_value=0)
         list_disp["Total_Unique"] = list_disp.sum(axis=1)
-        list_disp["Positive"] = list_disp[[col for col in positive_dispositions if col in list_disp.columns]].sum(axis=1)
+        list_disp["Positive"] = list_disp.get("Follow Up", 0) + list_disp.get("Virtual Meet Proposed", 0) + list_disp.get("Virtual Meet Confirmed", 0)
         list_disp["Positive_%"] = (list_disp["Positive"] / list_disp["Total_Unique"] * 100).round(2)
-        cols = ["Total_Unique", "Positive", "Positive_%"] + sorted([c for c in list_disp.columns if c not in ["Total_Unique", "Positive", "Positive_%"]])
-        list_disp_summary = list_disp[cols].sort_values("Total_Unique", ascending=False)
+        list_disp_summary = list_disp.sort_values("Total_Unique", ascending=False)
     else:
         list_disp_summary = pd.DataFrame()
 
-    return summary, agent_summary, list_disp_summary
+    return summary_data, agent_summary, list_disp_summary
 
 
-# ------------------- Main Processing -------------------
+# ------------------- Load & Process Data -------------------
+@st.cache_data(show_spinner=False)
+def load_and_process(uploaded_file):
+    df_calling = pd.read_csv(uploaded_file)
+    df_merged, df_unique = process_data(df_calling)
+    return df_merged, df_unique
+
 if uploaded_calling:
-    try:
-        df_calling = pd.read_csv(uploaded_calling)
-        df_merged, df_unique = process_data(df_calling)
+    with st.spinner("Processing data – deduplicating by phone number..."):
+        df_merged, df_unique_original = load_and_process(uploaded_calling)
 
-        # Filters
-        with st.sidebar:
-            st.subheader("Filters")
+    df_unique = df_unique_original.copy()
 
-            min_date = pd.to_datetime(df_unique["Call Date"]).min().date()
-            max_date = pd.to_datetime(df_unique["Call Date"]).max().date()
-            date_range = st.date_input("Date Range", [min_date, max_date], min_value=min_date, max_value=max_date)
+    # ------------------- Sidebar Filters -------------------
+    with st.sidebar:
+        col1, col2 = st.columns(2)
+        min_date = pd.to_datetime(df_unique["Call Date"]).min().date()
+        max_date = pd.to_datetime(df_unique["Call Date"]).max().date()
+        with col1:
+            start_date = st.date_input("From", min_date, min_value=min_date, max_value=max_date)
+        with col2:
+            end_date = st.date_input("To", max_date, min_value=min_date, max_value=max_date)
 
-            if len(date_range) == 2:
-                start_date, end_date = date_range
-                df_unique = df_unique[(pd.to_datetime(df_unique["Call Date"]) >= pd.to_datetime(start_date)) &
-                                      (pd.to_datetime(df_unique["Call Date"]) <= pd.to_datetime(end_date))]
+        if start_date > end_date:
+            st.error("Start date cannot be after end date")
+            st.stop()
 
-            if "List Name" in df_unique.columns and df_unique["List Name"].notna().any():
-                lists = ["All"] + sorted(df_unique["List Name"].dropna().unique().tolist())
-                chosen_list = st.selectbox("List Name", lists, index=0)
-                if chosen_list != "All":
-                    df_unique = df_unique[df_unique["List Name"] == chosen_list]
+        df_unique = df_unique[
+            (pd.to_datetime(df_unique["Call Date"]) >= pd.to_datetime(start_date)) &
+            (pd.to_datetime(df_unique["Call Date"]) <= pd.to_datetime(end_date))
+        ]
 
-            if st.button("Apply Filters & Refresh", type="secondary"):
-                st.rerun()
+        if "List Name" in df_unique.columns and df_unique["List Name"].notna().any():
+            lists = ["All Lists"] + sorted(df_unique["List Name"].dropna().unique().tolist())
+            chosen_list = st.selectbox("Filter by List", lists, index=0)
+            if chosen_list != "All Lists":
+                df_unique = df_unique[df_unique["List Name"] == chosen_list]
 
-        # Generate Metrics
-        summary, agent_summary, list_disp_summary = generate_metrics(df_unique)
+    # Generate metrics
+    summary_data, agent_summary, list_disp_summary = generate_metrics(df_unique)
 
-        # Save to session
-        st.session_state.df_unique = df_unique
-        st.session_state.summary = summary
-        st.session_state.agent_summary = agent_summary
-        st.session_state.list_disposition_summary = list_disp_summary
+    # Save to session
+    st.session_state.df_unique = df_unique
+    st.session_state.summary = summary_data
+    st.session_state.agent_summary = agent_summary
+    st.session_state.list_disposition_summary = list_disp_summary
 
-        st.success(f"Unique Phone Analysis Ready | Total Unique Numbers: {len(df_unique):,}")
+    st.success(f"Analysis Complete • {len(df_unique):,} Unique Phone Numbers")
 
-    except Exception as e:
-        st.error(f"Error: {e}")
 else:
-    st.info("Please upload **Calling.csv** to begin.")
+    st.info("Please upload **Calling.csv** to start.")
     st.stop()
 
-# ================================= DASHBOARD =================================
+
+# ================================= CLEAN DASHBOARD =================================
+
 df_unique = st.session_state.df_unique
-summary = st.session_state.summary
+summary_data = st.session_state.summary
 agent_summary = st.session_state.agent_summary
 list_disp_summary = st.session_state.list_disposition_summary
 
-# Summary Metrics
-st.subheader("Overall Summary (Unique Phone Numbers Only)")
-summary_display = summary.copy()
-summary_display["Select"] = summary_display["Metric"].isin(st.session_state.selected_metrics)
+# ------------------- KPI Cards -------------------
+st.markdown("<h2 class='sub-header'>Key Performance Indicators</h2>", unsafe_allow_html=True)
 
-edited = st.data_editor(
-    summary_display,
-    use_container_width=True,
-    hide_index=True,
-    column_config={
-        "Select": st.column_config.CheckboxColumn("Highlight", default=False),
-        "Metric": st.column_config.TextColumn("Metric", disabled=True),
-        "Value": st.column_config.TextColumn("Value", disabled=True),
-    },
-    disabled=["Metric", "Value"]
-)
+cols = st.columns(5)
+metrics_order = [
+    ("Unique Data Dialled", "#0068c9"),
+    ("Unique Connected", "#2ecc71"),
+    ("Unique Connected >1min", "#ff6b6b"),
+    ("Total Positive (%)", "#9b59b6"),
+    ("Follow Up (%)", "#efe560"),
+    ("Virtual Meet Proposed (%)", "#25e8ec"),
+    ("Virtual Meet Confirmed (%)", "#ec6a1a")
+]
 
-new_sel = set(edited[edited["Select"]]["Metric"])
-if new_sel != st.session_state.selected_metrics:
-    st.session_state.selected_metrics = new_sel
-    st.rerun()
+for i, (label, color) in enumerate(metrics_order):
+    with cols[i % 5]:
+        value = summary_data[label]
+        st.markdown(f"""
+        <div style="background:{color}10; padding:20px; border-radius:12px; border-left:6px solid {color}; text-align:center;">
+            <p style="margin:0; color:{color}; font-size:0.9rem;">{label}</p>
+            <h2 style="margin:5px 0 0; color:{color};">{value}</h2>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button(f"Drill → {label}", key=f"drill_{i}", use_container_width=True):
+            st.session_state.selected_metrics = {label}
+            st.rerun()
 
-# Call Volume by Hour (Unique Phones)
-st.subheader("Unique Phone Numbers Dialled by Hour")
-hourly = df_unique.groupby("Hour").size().reset_index(name="Unique_Phones")
-chart = alt.Chart(hourly).mark_bar(color="#0068c9").encode(
-    x=alt.X("Hour:O", title="Hour of Day"),
-    y=alt.Y("Unique_Phones:Q", title="Unique Phone Numbers"),
-    tooltip=["Hour", "Unique_Phones"]
-).properties(height=350, title="Unique Customers Reached by Hour")
-st.altair_chart(chart, use_container_width=True)
+# ------------------- Tabs for Clean Navigation -------------------
+tab1, tab2, tab3, tab4 = st.tabs(["Hourly Trend", "Top Agents", "List Performance", "Agent Leaderboard"])
 
-# Top 10 Agents by Positive Outcomes
-st.subheader("Top 10 Agents by Positive Outcomes (Unique Customers)")
-top10 = agent_summary.sort_values("Positive_Outcomes", ascending=False).head(10)
-st.dataframe(top10[["Agent Name", "Unique_Contacts", "Positive_Outcomes", "Effort_to_Positive"]], use_container_width=True)
+with tab1:
+    st.markdown("#### Unique Customers Reached by Hour of Day")
+    hourly = df_unique.groupby("Hour").size().reset_index(name="Count")
+    chart = alt.Chart(hourly).mark_area(
+        color="#0068c9", opacity=0.8, line={'color': '#003087'}
+    ).encode(
+        x=alt.X("Hour:O", title="Hour"),
+        y=alt.Y("Count:Q", title="Unique Phones Dialled"),
+        tooltip=["Hour", "Count"]
+    ).properties(height=400)
+    st.altair_chart(chart, use_container_width=True)
 
-bar = alt.Chart(top10).mark_bar(color="#2ecc71").encode(
-    y=alt.Y("Agent Name:N", sort="-x", title="Agent"),
-    x=alt.X("Positive_Outcomes:Q", title="Positive Outcomes"),
-    tooltip=["Agent Name", "Positive_Outcomes", "Unique_Contacts", "Effort_to_Positive"]
-).properties(height=400, title="Top Performers - Unique Positive Outcomes")
-st.altair_chart(bar, use_container_width=True)
+with tab2:
+    st.markdown("#### Top 10 Agents by Positive Outcomes")
+    top10 = agent_summary.nlargest(10, "Positive_Outcomes")
+    
+    col1, col2 = st.columns([2,3])
+    with col1:
+        st.dataframe(
+            top10[["Agent Name", "Unique_Contacts", "Positive_Outcomes", "Effort_to_Positive"]],
+            use_container_width=True,
+            hide_index=True
+        )
+    with col2:
+        bar = alt.Chart(top10).mark_bar(cornerRadiusTopRight=8, cornerRadiusBottomRight=8, color="#27ae60").encode(
+            y=alt.Y("Agent Name:N", sort="-x", title=""),
+            x=alt.X("Positive_Outcomes:Q", title="Positive Outcomes"),
+            tooltip=[alt.Tooltip("Agent Name"), "Positive_Outcomes", "Unique_Contacts", "Effort_to_Positive"]
+        ).properties(height=400)
+        st.altair_chart(bar, use_container_width=True)
 
-# List-wise Report
-st.subheader("List Name vs Primary Disposition (Unique Phone Numbers)")
-if not list_disp_summary.empty:
-    styled = list_disp_summary.style.format("{:,}").highlight_max(
-        subset=["Total_Unique", "Positive"], color="#c6e2ff"
-    )
-    st.dataframe(styled, use_container_width=True)
+with tab3:
+    st.markdown("#### List-wise Performance (Unique Phones)")
+    if not list_disp_summary.empty:
+        styled = list_disp_summary.style \
+            .format("{:,}") \
+            .background_gradient(cmap="Greens", subset=["Total_Unique", "Positive", "Positive_%"]) \
+            .bar(subset=["Positive_%"], color='#90EE90')
+        st.dataframe(styled, use_container_width=True)
+        
+        csv = list_disp_summary.to_csv().encode()
+        st.download_button(
+            "Download List Report (CSV)",
+            data=csv,
+            file_name="list_performance_unique.csv",
+            mime="text/csv"
+        )
+    else:
+        st.info("No List Name column found in data.")
 
+with tab4:
+    st.markdown("#### Full Agent Performance Report")
+    st.dataframe(agent_summary, use_container_width=True)
+    csv_agent = agent_summary.to_csv(index=False).encode()
     st.download_button(
-        "Download List-wise Unique Report",
-        data=list_disp_summary.to_csv().encode(),
-        file_name="List_Name_vs_Disposition_Unique.csv",
+        "Download Full Agent Report",
+        data=csv_agent,
+        file_name="agent_performance_unique.csv",
         mime="text/csv"
     )
-else:
-    st.info("No List Name data available.")
 
-# Drill-Down
+# ------------------- Drill-Down Section -------------------
+# ==================== HELPER FUNCTION FOR DRILL-DOWN ====================
+def get_filtered_data(metric_name, df):
+    if "Unique Data Dialled" in metric_name:
+        return df
+    elif "Unique Connected" in metric_name and ">" not in metric_name:
+        return df[df["Connected/Not Connected"] == "Connected"]
+    elif ">30s" in metric_name:
+        return df[df["Slot"].isin(["30s–1min", "1–2min", "Above 2 Min"])]
+    elif ">1min" in metric_name:
+        return df[df["Slot"].isin(["1–2min", "Above 2 Min"])]
+    elif ">2min" in metric_name:
+        return df[df["Slot"] == "Above 2 Min"]
+    elif "(%)" in metric_name:
+        disp = metric_name.split(" (")[0].strip()
+        return df[df["Primary Disposition"] == disp]
+    else:
+        return pd.DataFrame()
+
+# ==================== DRILL-DOWN SECTION ====================
 if st.session_state.selected_metrics:
-    st.markdown("### Drill-Down: Selected Metrics")
+    st.markdown("---")
+    st.markdown("<h2 style='color:#c2410c; text-align:center;'>Drill-Down Analysis</h2>", unsafe_allow_html=True)
+    
     for metric in st.session_state.selected_metrics:
-        st.markdown(f"#### {metric}")
-        if "Unique Data Dialled" in metric:
-            filt = df_unique.copy()
-        elif "Unique Connected" in metric and ">" not in metric:
-            filt = df_unique[df_unique["Connected/Not Connected"] == "Connected"]
-        elif ">30s" in metric:
-            filt = df_unique[df_unique["Slot"].isin(["30s–1min", "1–2min", "Above 2 Min"])]
-        elif ">1min" in metric:
-            filt = df_unique[df_unique["Slot"].isin(["1–2min", "Above 2 Min"])]
-        elif ">2min" in metric:
-            filt = df_unique[df_unique["Slot"] == "Above 2 Min"]
-        elif "(%)" in metric:
-            disp = metric.split(" (%)")[0].split(" (")[0]
-            filt = df_unique[df_unique["Primary Disposition"] == disp]
-        else:
-            filt = pd.DataFrame()
+        filtered_df = get_filtered_data(metric, df_unique)
+        record_count = len(filtered_df)
+        
+        with st.expander(f"{metric} → {record_count:,} Unique Records", expanded=True):
+            if record_count > 0:
+                st.metric("Total Records in This View", f"{record_count:,}")
+                st.dataframe(filtered_df, use_container_width=True)
+                
+                csv = filtered_df.to_csv(index=False).encode()
+                st.download_button(
+                    label=f"Download {metric} Data",
+                    data=csv,
+                    file_name=f"{metric.replace(' ', '_').replace('%', 'pct')}.csv",
+                    mime="text/csv",
+                    key=f"download_{metric}"
+                )
+            else:
+                st.info("No records match this filter.")
 
-        if not filt.empty:
-            st.metric("Unique Records", len(filt))
-            st.dataframe(filt, use_container_width=True)
-            st.download_button(f"Download {metric}", filt.to_csv(index=False).encode(),
-                               file_name=f"{metric.replace(' ', '_')}.csv", mime="text/csv", key=metric)
-        else:
-            st.info("No matching data.")
+    # Clear selection button
+    if st.button("Clear Drill-Down Selection", type="secondary"):
+        st.session_state.selected_metrics = set()
+        st.rerun()
 
-# Full Agent Performance
-st.subheader("Agent Performance Summary (Unique Phone Numbers)")
-st.dataframe(agent_summary, use_container_width=True)
-st.download_button("Download Full Agent Report", agent_summary.to_csv(index=False).encode(),
-                   file_name="Agent_Performance_Unique_Phone.csv", mime="text/csv")
 
-# Raw Unique Data
-with st.expander("View Raw Unique Data (One Row Per Phone Number)"):
+# ==================== RAW DATA (Optional) ====================
+with st.expander("Raw Unique Data – One Row Per Phone Number (Best Call Kept)"):
+    st.write(f"**Total Unique Phone Numbers:** {len(df_unique):,}")
     st.dataframe(df_unique, use_container_width=True)
-
+    
+    csv_all = df_unique.to_csv(index=False).encode()
+    st.download_button(
+        "Download Full Raw Unique Data",
+        data=csv_all,
+        file_name="Unique_Phone_Numbers_Best_Call_Raw.csv",
+        mime="text/csv"
+    )
