@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
 import altair as alt
+import matplotlib
 from datetime import datetime
 
 # ------------------- Page Config -------------------
@@ -374,3 +375,4 @@ with st.expander("Raw Unique Data – One Row Per Phone Number (Best Call Kept)"
         file_name="Unique_Phone_Numbers_Best_Call_Raw.csv",
         mime="text/csv"
     )
+
