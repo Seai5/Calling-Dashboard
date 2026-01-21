@@ -27,7 +27,7 @@ Language Barrier,Connected,Lost,Language Barrier
 CNA--Network Out of Order,Not connected,Not Connected,CNA--Network Out of Order
 Location Mismatch,Connected,Lost,Location Mismatch
 Out Of Coverage,Not connected,Not Connected,Not Connected
-Follow up Cold,Connected,Follow Up,Follow up Cold
+Follow up cold,Connected,Follow Up,Follow up Cold
 Busy,Not connected,Not Connected,Busy
 Low Budget,Connected,Lost,Low Budget
 Others,Connected,Lost,Others
@@ -101,3 +101,4 @@ MISSED,Not connected,Not Connected,MISSED
 Invalid_Number,Not connected,Not Connected,Invalid_Number
 0,Connected,Open,Call disconnected on opening
 BWC,Connected,Lost,BWC
+
