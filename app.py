@@ -104,12 +104,12 @@ def generate_metrics(df_unique):
 
     def pct(val): return round(val / unique_connected * 100, 2) if unique_connected else 0
 
-    positive_dispositions = ["Follow Up", "Virtual Meet Proposed", "Virtual Meet Confirmed"]
+    positive_dispositions = ["Follow_Up", "Virtual Meet Proposed", "Virtual Meet Confirmed"]
     disp_counts = df_unique["Primary Disposition"].value_counts()
 
     sdw = disp_counts.get("SDW", 0)
     lost = disp_counts.get("Lost", 0)
-    fw = disp_counts.get("Follow Up", 0)
+    fw = disp_counts.get("Follow_Up", 0)
     vp = disp_counts.get("Virtual Meet Proposed", 0)
     vc = disp_counts.get("Virtual Meet Confirmed", 0)
     positive_total = fw + vp + vc
@@ -123,7 +123,7 @@ def generate_metrics(df_unique):
         "Connect %": f"{connect_pct}%",
         "SDW (%)": f"{pct(sdw)}%",
         "Lost (%)": f"{pct(lost)}%",
-        "Follow Up (%)": f"{pct(fw)}%",
+        "Follow_Up (%)": f"{pct(fw)}%",
         "Virtual Meet Proposed (%)": f"{pct(vp)}%",
         "Virtual Meet Confirmed (%)": f"{pct(vc)}%",
         "Total Positive (%)": f"{pct(positive_total)}%"
@@ -152,7 +152,7 @@ def generate_metrics(df_unique):
     if "List Name" in df_unique.columns and df_unique["List Name"].notna().any():
         list_disp = df_unique.groupby(["List Name", "Primary Disposition"]).size().unstack(fill_value=0)
         list_disp["Total_Unique"] = list_disp.sum(axis=1)
-        list_disp["Positive"] = list_disp.get("Follow Up", 0) + list_disp.get("Virtual Meet Proposed", 0) + list_disp.get("Virtual Meet Confirmed", 0)
+        list_disp["Positive"] = list_disp.get("Follow_Up", 0) + list_disp.get("Virtual Meet Proposed", 0) + list_disp.get("Virtual Meet Confirmed", 0)
         list_disp["Positive_%"] = (list_disp["Positive"] / list_disp["Total_Unique"] * 100).round(2)
         list_disp_summary = list_disp.sort_values("Total_Unique", ascending=False)
     else:
@@ -232,7 +232,7 @@ metrics_order = [
     ("Unique Connected >1min", "#ff6b6b"),
     ("Connect %","#0068c9"),
     ("Total Positive (%)", "#9b59b6"),
-    ("Follow Up (%)", "#efe560"),
+    ("Follow_Up (%)", "#efe560"),
     ("Virtual Meet Proposed (%)", "#25e8ec"),
     ("Virtual Meet Confirmed (%)", "#ec6a1a")
 ]
@@ -376,6 +376,7 @@ with st.expander("Raw Unique Data – One Row Per Phone Number (Best Call Kept)"
         file_name="Unique_Phone_Numbers_Best_Call_Raw.csv",
         mime="text/csv"
     )
+
 
 
 
