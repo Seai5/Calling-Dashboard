@@ -229,7 +229,9 @@ cols = st.columns(5)
 metrics_order = [
     ("Unique Data Dialled", "#0068c9"),
     ("Unique Connected", "#2ecc71"),
+    ("Unique Connected >30s","#9b59b6"),
     ("Unique Connected >1min", "#ff6b6b"),
+    ("Unique Connected >2min","#25e8ec"),
     ("Connect %","#0068c9"),
     ("Total Positive (%)", "#9b59b6"),
     ("Follow Up (%)", "#efe560"),
@@ -376,6 +378,7 @@ with st.expander("Raw Unique Data – One Row Per Phone Number (Best Call Kept)"
         file_name="Unique_Phone_Numbers_Best_Call_Raw.csv",
         mime="text/csv"
     )
+
 
 
 
