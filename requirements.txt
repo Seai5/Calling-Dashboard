@@ -1,3 +1,6 @@
-Streamlit
-Pandas
-matplotlib
+streamlit>=1.35.0
+starlette<0.38.0
+pandas
+gspread
+oauth2client
+plotly
